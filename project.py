@@ -5,12 +5,63 @@ from functools import wraps
 from scipy.spatial import distance
 import RPi.GPIO as GPIO
 import time
+import telegram
+import requests
+import json
 
-time = 0
+TOKEN = "5727339733:AAGrTLcd74yedbEid42fCBacLiRk4FZz0Dk"
+
+stop_time = 0
 count = 0
 right_distance = 10
 left_distance = 0
 count_bool = False
+
+GPIO.setwarnings(False)
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(3, GPIO.OUT)
+GPIO.setup(4, GPIO.OUT)
+
+bot = telegram.Bot(token=TOKEN)
+
+with open('./data/kakao_code.json', 'r') as fp:
+    tokens = json.load(fp)
+    
+friend_url = "https://kapi.kakao.com/v1/api/talk/friends"
+
+# GET /v1/api/talk/friends HTTP/1.1
+# Host: kapi.kakao.com
+# Authorization: Bearer ${ACCESS_TOKEN}
+
+headers={"Authorization" : "Bearer " + tokens["access_token"]}
+result = json.loads(requests.get(friend_url, headers=headers).text)
+friends_list = result.get("elements")
+
+def kakao() :
+    for i in range(len(friends_list)):
+        print(friends_list[i].get("uuid"))
+        friend_id = friends_list[i].get("uuid")
+        print(friend_id)
+
+        send_url= "https://kapi.kakao.com/v1/api/talk/friends/message/default/send"
+
+        data={
+            'receiver_uuids': '["{}"]'.format(friend_id),
+            "template_object": json.dumps({
+                "object_type":"text",
+                "text":"WARNING!!!!!!!!!! HE IS SLEEPING NOW IN HIS CAR !",
+                "link":{
+                    "web_url":"www.daum.net",
+                    "web_url":"www.naver.com"
+                },
+                "button_title": "바로 확인"
+            })
+        }
+
+        response = requests.post(send_url, headers=headers, data=data)
+        response.status_code
+
+
 
 # dlib model
 faceCascade = cv2.CascadeClassifier('data/haarcascade_frontalface_default.xml')
@@ -32,10 +83,10 @@ def calculate_EAR(eye):
     return ear_aspect_ratio
 
 def detect(gray, frame):
-    global time, count, left_distance, right_distance, count_bool
+    global stop_time, count, left_distance, right_distance, count_bool
     
-    if time >= 200:
-        time = 0
+    if stop_time >= 200:
+        stop_time = 0
         count = 0
         count_bool = False
     
@@ -92,24 +143,54 @@ def detect(gray, frame):
         count_bool = True
         
     if count_bool:
-        time += 1
-    print('time: ', time)
+        stop_time += 1
+    print('time: ', stop_time)
     print('count: ', count)
     
-    if count >= 15:
-        print('slfjsdklfsjdsldfjskldfjsdflkjflsaf')
-        time = 0
+    if count >= 10:
+        print('Sleep!!!!!')
+        # sound baam
+        try:
+            pwm = GPIO.PWM(3, 2000)
+            GPIO.output(4, True)
+            
+            for i in range(0, 20):
+                pwm.start(100.0)
+                time.sleep(0.05)
+                pwm.stop()
+                time.sleep(0.05)    
+            
+            
+            GPIO.output(4, False)
+
+            kakao()
+            bot.sendMessage(chat_id='-1001789099529', text="WARNING!!!!!!!!!! HE IS SLEEPING NOW IN HIS CAR ")
+            
+        except Exception as e:
+            print("error : ", e)
+        
+        # motor
+        
+        stop_time = 0
         count = 0
         count_bool = False
-    
+        
+        
+        
+    right_distance = 10
+    left_distance = 0
     return frame
 
 while True:
     _, frame = video_capture.read()
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+
+    
     canvas = detect(gray, frame)
     
     cv2.imshow("haha", canvas)
+    
     
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
