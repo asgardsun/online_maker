@@ -213,4 +213,4 @@ UDP라는 수업을 들으면서 라즈베리파이에 관심이 많이 가게 �
 아쉬운점이 있다면 라즈베리파이에 대한 지식이나 관심이 더 있었더라면 기능적인 부분을 더 추가 하고 팀원들에게 더
 도움이 될 수 있지 않았을까라는 생각이 들었다.
 
-<img src="https://user-images.githubusercontent.com/53885957/210031977-0e18597f-a88f-49a2-a4ba-ef27f4b4263e.JPG" width="600" height="800"/>
+<img src="https://user-images.githubusercontent.com/53885957/210032378-8e031d4d-616d-4079-9169-058153ea063f.JPG" width="600" height="800"/>
