@@ -140,13 +140,6 @@
 <br>
 <br>
 <br>
-
-> ## WBS
-
-![wbs](./image/wbs.png)
-
-<br>
-<br>
 <br>
 
 # 프로젝트를 진행하면서...
